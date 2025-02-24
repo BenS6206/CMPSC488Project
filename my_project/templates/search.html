@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Search County - My Flask App{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Search for a County</h2>
+    <form method="POST" action="{{ url_for('main.search_county') }}">
+        <div class="mb-3">
+            <input type="text" class="form-control" name="county_name" placeholder="Enter county name..." required>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    {% if results is not none %}
+        <h3 class="mt-4">Results for "{{ search_term }}"</h3>
+        {% if results %}
+            <table class="table table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>County</th>
+                        <th>2022</th>
+                        <th>2021</th>
+                        <th>2020</th>
+                        <th>2019</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in results %}
+                        <tr>
+                            <td>{{ row.county }}</td>
+                            <td>{{ row["2022"] }}</td>
+                            <td>{{ row["2021"] }}</td>
+                            <td>{{ row["2020"] }}</td>
+                            <td>{{ row["2019"] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock content %}
