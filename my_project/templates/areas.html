@@ -1,0 +1,34 @@
+<!-- templates/areas.html -->
+{% extends "base.html" %}
+
+{% block title %}Areas - My Flask App{% endblock title %}
+
+{% block content %}
+<h2>All Areas</h2>
+{% if areas %}
+  <table class="table table-striped mt-3">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Population</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for area in areas %}
+        <tr>
+          <td>{{ area.id }}</td>
+          <td>{{ area.name }}</td>
+          <td>{{ area.population }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No areas found in the database.</p>
+{% endif %}
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('main.search_county') }}">Search County</a>
+  </li>
+{% endblock content %}
+

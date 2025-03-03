@@ -1,0 +1,31 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Home - My Flask App{% endblock title %}
+
+{% block content %}
+<div class="row">
+  <div class="col">
+    <h1 class="my-4">Welcome to My Project</h1>
+    <p>This site demonstrates polygons, population data, and more.</p>
+    <p>Below is a map loaded from OpenStreetMap via Leaflet.</p>
+    <div id="map" style="height: 500px;">
+
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""/>
+
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  // Initialize Leaflet map
+  const map = L.map('map').setView([20, 0], 2);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+</script>
+{% endblock scripts %}
