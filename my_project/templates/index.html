@@ -1,0 +1,30 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Home - My Flask App{% endblock title %}
+
+{% block content %}
+<div class="row">
+  <div class="col">
+    <h1 class="my-4">Welcome to My Project</h1>
+    <p>This site demonstrates polygons, population data, and more.</p>
+    <p>Below is a map loaded from OpenStreetMap via Leaflet.</p>
+    <div id="map" style="height: 500px;">
+
+       <iframe width="825" height="450" src="https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%3B%0Aarea%5B%22ISO3166-2%22%3D%22US-PA%22%5D-%3E.state%3B%0A%28%0A++++nwr%28area.state%29%5B%22type%22%3D%22boundary%22%5D%5B%22admin_level%22%3D%226%22%5D%3B%0A%29%3B%0Aout+geom+qt%3B%0A%0A%0A%0A%0A%0A%7B%7Bstyle%3A+%0Anode+%7B%0A++opacity%3A0.0%3B%0A++fill-opacity%3A0.0%3B%0A%7D%0A+%7D%7D" style="border: 1px solid black"></iframe><br/><small></small>
+
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  // Initialize Leaflet map
+  const map = L.map('map').setView([20, 0], 2);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+</script>
+{% endblock scripts %}
