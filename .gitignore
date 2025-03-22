@@ -34,3 +34,10 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Project specific
+*.db
+*.sqlite3
+*.dump
+.env
+*.docx
