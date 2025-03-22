@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{
+    searchQuery: '',
+    yearFilter: 'all',
+    populationFilter: 'all',
+    map: null,
+    
+    initMap() {
+        this.map = L.map('map').setView([39.8283, -98.5795], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(this.map);
+        
+        // Add sample marker
+        L.marker([39.8283, -98.5795])
+            .bindPopup(`
+                <strong>Sample County, State</strong><br>
+                Population: 1,000,000<br>
+                Year: 2023
+            `)
+            .addTo(this.map);
+    }
+}" x-init="initMap()">
+    <!-- Search and Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search Areas</label>
+            <input type="text" 
+                   x-model="searchQuery" 
+                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                   placeholder="Enter area name...">
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Year</label>
+            <select x-model="yearFilter" 
+                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="all">All Years</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+                <option value="2020">2020</option>
+            </select>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Population</label>
+            <select x-model="populationFilter" 
+                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="all">All Populations</option>
+                <option value="less100k">Less than 100k</option>
+                <option value="100kTo500k">100k - 500k</option>
+                <option value="500kTo1m">500k - 1M</option>
+                <option value="more1m">More than 1M</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Population Estimates Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-4 py-5 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Population Estimates</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Geographic Area</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estimates Base</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2020</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2021</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2022</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2023</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Sample County, State</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Final</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1,000,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1,020,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1,045,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1,075,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1,100,000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <div id="map" class="map-container w-full"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('mapView', () => ({
+        initMap() {
+            this.map = L.map('map').setView([40.7128, -74.0060], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(this.map);
+        },
+
+        async searchLocation() {
+            if (!this.searchQuery.trim()) {
+                this.searchResults = [];
+                return;
+            }
+
+            this.loading = true;
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(this.searchQuery)}`);
+                if (!response.ok) throw new Error('Search failed');
+                
+                const data = await response.json();
+                this.searchResults = data;
+            } catch (error) {
+                this.message = 'Error searching: ' + error.message;
+                this.messageType = 'error';
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async selectArea(area) {
+            this.selectedArea = area;
+            
+            // Remove previous layer
+            if (this.currentLayer) {
+                this.map.removeLayer(this.currentLayer);
+            }
+
+            try {
+                const response = await fetch(`/api/area-boundary/${area.id}`);
+                if (!response.ok) throw new Error('Failed to fetch boundary');
+
+                const data = await response.json();
+                this.currentLayer = L.geoJSON(data.geojson, {
+                    style: {
+                        color: '#2563eb',
+                        weight: 2,
+                        opacity: 0.8,
+                        fillOpacity: 0.35
+                    }
+                }).addTo(this.map);
+
+                // Add population label
+                const center = this.currentLayer.getBounds().getCenter();
+                const currentPopulation = area.population_data.find(d => d.year === 2023);
+                if (currentPopulation) {
+                    L.marker(center)
+                        .bindPopup(`${area.name}<br>Population (2023): ${currentPopulation.population_count.toLocaleString()}`)
+                        .addTo(this.map)
+                        .openPopup();
+                }
+
+                this.map.fitBounds(this.currentLayer.getBounds());
+            } catch (error) {
+                this.message = 'Error loading area boundary: ' + error.message;
+                this.messageType = 'error';
+            }
+        }
+    }));
+});
+</script>
+{% endblock %} 

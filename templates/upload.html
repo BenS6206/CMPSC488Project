@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{
+    isDragging: false,
+    uploadStatus: null,
+    previewData: null,
+    estimatedData: null,
+
+    handleDrop(e) {
+        e.preventDefault();
+        this.isDragging = false;
+        const file = e.dataTransfer.files[0];
+        this.uploadFile(file);
+    },
+
+    handleFileInput(e) {
+        const file = e.target.files[0];
+        this.uploadFile(file);
+    },
+
+    async uploadFile(file) {
+        if (!file) return;
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            this.uploadStatus = 'uploading';
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            if (response.ok) {
+                this.uploadStatus = 'success';
+                this.previewData = result.data;
+                this.calculateEstimates(result.data);
+            } else {
+                this.uploadStatus = 'error';
+                alert(result.error || 'Upload failed');
+            }
+        } catch (error) {
+            this.uploadStatus = 'error';
+            alert('Upload failed: ' + error.message);
+        }
+    },
+
+    calculateEstimates(data) {
+        if (!data || data.length === 0) return;
+        
+        this.estimatedData = data.map(item => ({
+            name: item.name,
+            status: 'Estimated',
+            base: item.population,
+            estimates: {
+                2020: item.population,
+                2021: Math.round(item.population * 1.02),
+                2022: Math.round(item.population * 1.045),
+                2023: Math.round(item.population * 1.07)
+            }
+        }));
+    },
+
+    downloadCSV() {
+        if (!this.estimatedData) return;
+        
+        const headers = ['Geographic Area', 'Status', 'Estimates Base', '2020', '2021', '2022', '2023'];
+        const rows = this.estimatedData.map(area => [
+            area.name,
+            area.status,
+            area.base,
+            area.estimates[2020],
+            area.estimates[2021],
+            area.estimates[2022],
+            area.estimates[2023]
+        ]);
+        
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.join(','))
+        ].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'population_estimates.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    }
+}">
+    <!-- Upload Area -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-4">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Upload Census Data</h2>
+            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md"
+                 :class="{ 'border-blue-500 bg-blue-50': isDragging }"
+                 @dragover.prevent="isDragging = true"
+                 @dragleave.prevent="isDragging = false"
+                 @drop="handleDrop">
+                <div class="space-y-1 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="flex text-sm text-gray-600">
+                        <label class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                            <span>Upload a file</span>
+                            <input type="file" class="sr-only" @change="handleFileInput" accept=".csv,.xlsx">
+                        </label>
+                        <p class="pl-1">or drag and drop</p>
+                    </div>
+                    <p class="text-xs text-gray-500">
+                        CSV or Excel files up to 10MB
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Status -->
+    <div x-show="uploadStatus" x-cloak>
+        <div x-show="uploadStatus === 'uploading'" class="bg-blue-50 p-4 rounded-lg">
+            <p class="text-blue-700">Processing file...</p>
+        </div>
+        <div x-show="uploadStatus === 'success'" class="bg-green-50 p-4 rounded-lg">
+            <p class="text-green-700">File processed successfully!</p>
+        </div>
+        <div x-show="uploadStatus === 'error'" class="bg-red-50 p-4 rounded-lg">
+            <p class="text-red-700">Upload failed. Please try again.</p>
+        </div>
+    </div>
+
+    <!-- Population Estimates -->
+    <div x-show="estimatedData" x-cloak class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-4 py-5 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900">Population Estimates</h3>
+            <button @click="downloadCSV" 
+                    class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Download CSV
+            </button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Geographic Area</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estimates Base</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2020</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2021</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2022</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2023</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-for="area in estimatedData" :key="area.name">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="area.name"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="area.status"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="area.base.toLocaleString()"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="area.estimates[2020].toLocaleString()"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="area.estimates[2021].toLocaleString()"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="area.estimates[2022].toLocaleString()"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="area.estimates[2023].toLocaleString()"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Raw Data Preview -->
+    <div x-show="previewData" x-cloak class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-4 py-5 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Raw Data Preview</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Population</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-for="(item, index) in previewData.slice(0, 10)" :key="index">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="item.name"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="item.population.toLocaleString()"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="item.year"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="`${item.latitude}, ${item.longitude}`"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+            <div class="px-4 py-3 bg-gray-50 text-sm text-gray-500">
+                Showing first 10 rows of <span x-text="previewData.length"></span> total rows
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('upload', () => ({
+        async handleDrop(event) {
+            this.dragOver = false;
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                await this.processFile(files[0]);
+            }
+        },
+
+        async handleFileSelect(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                await this.processFile(files[0]);
+            }
+        },
+
+        async processFile(file) {
+            if (!file.name.endsWith('.csv')) {
+                this.message = 'Please upload a CSV file';
+                this.messageType = 'error';
+                return;
+            }
+
+            this.loading = true;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const data = await response.json();
+                this.previewData = data;
+                this.message = 'File uploaded successfully';
+                this.messageType = 'success';
+            } catch (error) {
+                this.message = 'Error uploading file: ' + error.message;
+                this.messageType = 'error';
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async downloadData() {
+            try {
+                const response = await fetch('/api/download');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'census_data.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                this.message = 'Error downloading file: ' + error.message;
+                this.messageType = 'error';
+            }
+        },
+
+        async importData() {
+            try {
+                const response = await fetch('/api/import', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.previewData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Import failed');
+                }
+
+                this.message = 'Data imported successfully';
+                this.messageType = 'success';
+            } catch (error) {
+                this.message = 'Error importing data: ' + error.message;
+                this.messageType = 'error';
+            }
+        }
+    }));
+});
+</script>
+{% endblock %} 
