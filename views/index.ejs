@@ -1,0 +1,58 @@
+<%- include('header') %>
+
+<main>
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Welcome to Your Brand</h1>
+        <p>Professional services tailored to your needs</p>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <h2>Contact Us</h2>
+        <div class="contact-info">
+            <div class="info-item">
+                <h3>Email</h3>
+                <p>contact@yourbrand.com</p>
+            </div>
+            <div class="info-item">
+                <h3>Phone</h3>
+                <p>(555) 123-4567</p>
+            </div>
+            <div class="info-item">
+                <h3>Address</h3>
+                <p>123 Business Street<br>City, State 12345</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Schedule Section -->
+    <section id="schedule" class="schedule">
+        <h2>Schedule an Appointment</h2>
+        <form action="/schedule" method="POST">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="date">Date:</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            <div class="form-group">
+                <label for="time">Time:</label>
+                <input type="time" id="time" name="time" required>
+            </div>
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="4"></textarea>
+            </div>
+            <button type="submit">Schedule Now</button>
+        </form>
+    </section>
+</main>
+
+<%- include('footer') %> 

@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Census Data{% endblock %}
+
+{% block head %}
+<style>
+    .upload-section {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .upload-form {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .file-input-container {
+        margin: 20px 0;
+        padding: 20px;
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .file-label {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .file-label:hover {
+        background: #e9ecef;
+    }
+
+    .submit-button {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .submit-button:hover {
+        background: #0056b3;
+    }
+
+    .requirements-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 30px;
+    }
+
+    .requirements-section h3 {
+        color: #495057;
+        margin-bottom: 15px;
+    }
+
+    .requirements-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .requirements-list li {
+        margin-bottom: 10px;
+        padding-left: 25px;
+        position: relative;
+    }
+
+    .requirements-list li:before {
+        content: "•";
+        color: #007bff;
+        position: absolute;
+        left: 0;
+    }
+
+    .format-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .format-tab {
+        padding: 10px 20px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .format-tab.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    .format-content {
+        display: none;
+    }
+
+    .format-content.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-section">
+    <h1>Upload Census Data</h1>
+    <p>Upload your census data file to visualize population information on the map.</p>
+
+    <div class="format-tabs">
+        <div class="format-tab active" data-format="csv">CSV Format</div>
+        <div class="format-tab" data-format="geojson">GeoJSON Format</div>
+    </div>
+
+    <div class="format-content active" id="csv-content">
+        <div class="upload-form">
+            <h2>Upload CSV File</h2>
+            <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+                <div class="file-input-container">
+                    <input type="file" name="file" id="csvFile" class="file-input" accept=".csv">
+                    <label for="csvFile" class="file-label">Choose CSV File</label>
+                </div>
+                <button type="submit" class="submit-button">Upload CSV</button>
+            </form>
+        </div>
+
+        <div class="requirements-section">
+            <h3>CSV File Requirements</h3>
+            <ul class="requirements-list">
+                <li>File must be in CSV format with UTF-8 encoding</li>
+                <li>Required columns:
+                    <ul>
+                        <li><code>Geographic_Area</code> - Name of the location</li>
+                        <li><code>Status</code> - Type of area (City, Town, County, etc.)</li>
+                        <li><code>Population</code> - Current population count</li>
+                        <li><code>Latitude</code> - Decimal degrees (e.g., 40.7128)</li>
+                        <li><code>Longitude</code> - Decimal degrees (e.g., -74.0060)</li>
+                    </ul>
+                </li>
+                <li>Maximum file size: 10MB</li>
+                <li>Population values should be whole numbers</li>
+                <li>Coordinates should be in decimal degrees format</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="format-content" id="geojson-content">
+        <div class="upload-form">
+            <h2>Upload GeoJSON File</h2>
+            <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+                <div class="file-input-container">
+                    <input type="file" name="file" id="geojsonFile" class="file-input" accept=".geojson">
+                    <label for="geojsonFile" class="file-label">Choose GeoJSON File</label>
+                </div>
+                <button type="submit" class="submit-button">Upload GeoJSON</button>
+            </form>
+        </div>
+
+        <div class="requirements-section">
+            <h3>GeoJSON File Requirements</h3>
+            <ul class="requirements-list">
+                <li>File must be in valid GeoJSON format</li>
+                <li>Required properties in each feature:
+                    <ul>
+                        <li><code>name</code> - Name of the location</li>
+                        <li><code>status</code> - Type of area (City, Town, County, etc.)</li>
+                        <li><code>population</code> - Current population count</li>
+                    </ul>
+                </li>
+                <li>Maximum file size: 10MB</li>
+                <li>Population values should be whole numbers</li>
+                <li>Geometry should be valid according to GeoJSON specification</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle format tab switching
+    const formatTabs = document.querySelectorAll('.format-tab');
+    const formatContents = document.querySelectorAll('.format-content');
+
+    formatTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Update active tab
+            formatTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Show corresponding content
+            const format = tab.dataset.format;
+            formatContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === `${format}-content`) {
+                    content.classList.add('active');
+                }
+            });
+        });
+    });
+
+    // Update file input label when file is selected
+    const fileInputs = document.querySelectorAll('.file-input');
+    fileInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+            const label = e.target.nextElementSibling;
+            if (e.target.files.length > 0) {
+                label.textContent = e.target.files[0].name;
+            } else {
+                label.textContent = `Choose ${e.target.accept.split(',')[0].replace('.', '').toUpperCase()} File`;
+            }
+        });
+    });
+</script>
+{% endblock %} 

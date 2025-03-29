@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite VIP Transportation</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Flatpickr Calendar CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">ELITE TRANSPORT</div>
+            <div class="nav-links">
+                <a href="#home" class="active">Home</a>
+                <a href="#services">Services</a>
+                <a href="#contact">Contact</a>
+                <a href="#schedule" class="cta-button">Book Now</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <h1>Luxury Transportation</h1>
+            <p>Premium VIP car service for discerning clients</p>
+        </section>
+
+        <!-- Services Section -->
+        <section id="services" class="services">
+            <h2>Our Premium Services</h2>
+            <div class="service-grid">
+                <div class="service-item">
+                    <h3>Executive Travel</h3>
+                    <p>Door-to-door service for business professionals</p>
+                </div>
+                <div class="service-item">
+                    <h3>Airport Transfer</h3>
+                    <p>Seamless airport pickup and drop-off</p>
+                </div>
+                <div class="service-item">
+                    <h3>Event Transport</h3>
+                    <p>Special occasions and corporate events</p>
+                </div>
+                <div class="service-item">
+                    <h3>24/7 Availability</h3>
+                    <p>Round-the-clock service at your convenience</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact">
+            <h2>Contact Us</h2>
+            <div class="contact-info">
+                <div class="info-item">
+                    <h3>Direct Line</h3>
+                    <p>+1 (555) 123-4567</p>
+                </div>
+                <div class="info-item">
+                    <h3>Email</h3>
+                    <p>vip@elitetransport.com</p>
+                </div>
+                <div class="info-item">
+                    <h3>Base Location</h3>
+                    <p>123 Executive Drive<br>Luxury District, CA 90210</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Schedule Section -->
+        <section id="schedule" class="schedule">
+            <h2>Reserve Your Luxury Transport</h2>
+            <form action="mailto:vip@elitetransport.com" method="post" enctype="text/plain">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required placeholder="John Smith">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="john@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="+1 (555) 000-0000">
+                </div>
+                
+                <!-- Enhanced Date/Time Selection -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pickup-datetime">
+                            Pickup Date & Time 
+                            <span style="color: #666; font-size: 0.9em;">(Click to open calendar)</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="pickup-datetime" 
+                            class="flatpickr" 
+                            name="datetime" 
+                            required 
+                            placeholder="Click here to select date and time"
+                            data-input
+                        >
+                    </div>
+                </div>
+
+                <!-- Location Selection -->
+                <div class="form-group">
+                    <label for="pickup-location">Pickup Location</label>
+                    <input type="text" id="pickup-location" name="pickup-location" required placeholder="Enter full address">
+                </div>
+                <div class="form-group">
+                    <label for="dropoff-location">Drop-off Location</label>
+                    <input type="text" id="dropoff-location" name="dropoff-location" required placeholder="Enter full address">
+                </div>
+
+                <div class="form-group">
+                    <label for="service-type">Service Type</label>
+                    <select id="service-type" name="service-type" required>
+                        <option value="">Select Service</option>
+                        <option value="executive">Executive Travel</option>
+                        <option value="airport">Airport Transfer</option>
+                        <option value="event">Event Transport</option>
+                        <option value="hourly">Hourly Service</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="vehicle-preference">Vehicle Preference</label>
+                    <select id="vehicle-preference" name="vehicle-preference" required>
+                        <option value="">Select Vehicle</option>
+                        <option value="sedan">Luxury Sedan (Up to 3 passengers)</option>
+                        <option value="suv">Executive SUV (Up to 6 passengers)</option>
+                        <option value="van">Luxury Van (Up to 12 passengers)</option>
+                        <option value="stretch">Stretch Limousine (Up to 8 passengers)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Special Requirements</label>
+                    <textarea id="notes" name="notes" rows="4" placeholder="Additional requests or notes"></textarea>
+                </div>
+
+                <button type="submit">Confirm Reservation</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-info">
+                <p>© 2024 Elite Transport. All rights reserved.</p>
+                <p>Luxury Transportation Services</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Initialize Flatpickr Calendar
+        flatpickr("#pickup-datetime", {
+            enableTime: true,
+            dateFormat: "Y-m-d h:i K", // 12-hour time with AM/PM
+            minDate: "today",
+            time_24hr: false,
+            minTime: "06:00",
+            maxTime: "22:00",
+            defaultHour: 12,
+            disableMobile: false, // Better mobile experience
+            animate: true,
+            allowInput: true,
+            clickOpens: true,
+            position: "auto",
+            static: true
+        });
+
+        // Auto-open calendar when clicking the input
+        document.getElementById('pickup-datetime').addEventListener('focus', function(e) {
+            this._flatpickr.open();
+        });
+    </script>
+</body>
+</html> 

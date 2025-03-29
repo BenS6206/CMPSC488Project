@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    .search-container {
+        max-width: 1000px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    .search-box-container {
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+    .search-box {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+
+    .search-button {
+        padding: 12px 24px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.2s;
+    }
+
+    .search-button:hover {
+        background-color: #0056b3;
+    }
+
+    .search-results-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        max-height: 300px;
+        overflow-y: auto;
+        display: none;
+        z-index: 1000;
+    }
+
+    .search-result-item {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s;
+    }
+
+    .search-result-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .search-result-item.selected {
+        background-color: #e3f2fd;
+        font-weight: bold;
+    }
+
+    .hierarchy-search {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .search-level {
+        flex: 1;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .search-level h3 {
+        margin: 0 0 15px 0;
+        color: #333;
+        font-size: 1.1em;
+    }
+
+    .location-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .location-item {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s;
+    }
+
+    .location-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .location-item.selected {
+        background-color: #e3f2fd;
+        font-weight: bold;
+    }
+
+    .results-container {
+        margin-top: 20px;
+    }
+
+    .result-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .population-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .population-item {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 6px;
+        text-align: center;
+    }
+
+    .population-year {
+        font-weight: bold;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .population-value {
+        font-size: 1.1em;
+        color: #333;
+    }
+
+    .search-filter {
+        margin-bottom: 15px;
+    }
+
+    .search-filter input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .no-results {
+        padding: 15px;
+        text-align: center;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <h1>Population Data Search</h1>
+    
+    <div class="search-box-container">
+        <input type="text" id="searchInput" class="search-box" placeholder="Search for any location...">
+        <button id="searchButton" class="search-button">Search</button>
+        <div id="searchResults" class="search-results-dropdown"></div>
+    </div>
+
+    <div class="hierarchy-search">
+        <!-- State Level -->
+        <div class="search-level" id="stateLevel">
+            <h3>States</h3>
+            <div class="search-filter">
+                <input type="text" placeholder="Filter states..." id="stateFilter">
+            </div>
+            <div class="location-list" id="stateList"></div>
+        </div>
+        
+        <!-- County Level -->
+        <div class="search-level" id="countyLevel">
+            <h3>Counties</h3>
+            <div class="search-filter">
+                <input type="text" placeholder="Filter counties..." id="countyFilter">
+            </div>
+            <div class="location-list" id="countyList"></div>
+        </div>
+
+        <!-- City Level -->
+        <div class="search-level" id="cityLevel">
+            <h3>Cities</h3>
+            <div class="search-filter">
+                <input type="text" placeholder="Filter cities..." id="cityFilter">
+            </div>
+            <div class="location-list" id="cityList"></div>
+        </div>
+    </div>
+
+    <div id="selectedLocationData" class="results-container"></div>
+</div>
+
+<script>
+let currentState = '';
+let currentCounty = '';
+let allLocations = [];
+
+// Function to format population numbers
+function formatNumber(num) {
+    if (num === null || num === undefined || num === '') return 'N/A';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+// Function to display location data
+function displayLocationData(data) {
+    const container = document.getElementById('selectedLocationData');
+    if (!data) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="result-card">
+            <h2>${data.Geographic_Area}</h2>
+            <div>Status: ${data.Status}</div>
+            <div class="population-grid">
+                <div class="population-item">
+                    <div class="population-year">Base Estimate</div>
+                    <div class="population-value">${formatNumber(data.Estimated_Base)}</div>
+                </div>
+                <div class="population-item">
+                    <div class="population-year">2020</div>
+                    <div class="population-value">${formatNumber(data['2020_Population'])}</div>
+                </div>
+                <div class="population-item">
+                    <div class="population-year">2021</div>
+                    <div class="population-value">${formatNumber(data['2021_Population'])}</div>
+                </div>
+                <div class="population-item">
+                    <div class="population-year">2022</div>
+                    <div class="population-value">${formatNumber(data['2022_Population'])}</div>
+                </div>
+                <div class="population-item">
+                    <div class="population-year">2023</div>
+                    <div class="population-value">${formatNumber(data['2023_Population'])}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Function to filter locations
+function filterLocations(items, filterText) {
+    return items.filter(item => 
+        item.toLowerCase().includes(filterText.toLowerCase())
+    );
+}
+
+// Function to update location list
+function updateLocationList(containerId, items, filterText = '') {
+    const container = document.getElementById(containerId);
+    const filtered = filterLocations(items, filterText);
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="no-results">No matches found</div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(item => `
+        <div class="location-item" data-name="${item}">
+            ${item}
+        </div>
+    `).join('');
+}
+
+// Function to fetch and display states
+async function loadStates() {
+    try {
+        const response = await fetch('/api/states');
+        const states = await response.json();
+        updateLocationList('stateList', states);
+    } catch (error) {
+        console.error('Error loading states:', error);
+    }
+}
+
+// Function to load counties for a state
+async function loadCounties(state) {
+    try {
+        const response = await fetch(`/api/counties/${encodeURIComponent(state)}`);
+        const counties = await response.json();
+        updateLocationList('countyList', counties);
+        document.getElementById('countyLevel').style.display = 'block';
+    } catch (error) {
+        console.error('Error loading counties:', error);
+    }
+}
+
+// Function to load cities for a county
+async function loadCities(state, county) {
+    try {
+        const response = await fetch(`/api/cities/${encodeURIComponent(state)}/${encodeURIComponent(county)}`);
+        const cities = await response.json();
+        updateLocationList('cityList', cities);
+        document.getElementById('cityLevel').style.display = 'block';
+    } catch (error) {
+        console.error('Error loading cities:', error);
+    }
+}
+
+// Add new search functionality
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+const searchButton = document.getElementById('searchButton');
+
+async function searchLocations(query) {
+    if (!query) {
+        searchResults.style.display = 'none';
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/search-locations?q=${encodeURIComponent(query)}`);
+        const results = await response.json();
+        
+        if (results.length === 0) {
+            searchResults.innerHTML = '<div class="search-result-item">No matches found</div>';
+        } else {
+            searchResults.innerHTML = results.map(location => `
+                <div class="search-result-item" data-name="${location.Geographic_Area}">
+                    ${location.Geographic_Area}
+                </div>
+            `).join('');
+        }
+        
+        searchResults.style.display = 'block';
+    } catch (error) {
+        console.error('Error searching locations:', error);
+        searchResults.innerHTML = '<div class="search-result-item">Error searching locations</div>';
+        searchResults.style.display = 'block';
+    }
+}
+
+searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+    
+    if (query.length >= 2) {
+        searchTimeout = setTimeout(() => searchLocations(query), 300);
+    } else {
+        searchResults.style.display = 'none';
+    }
+});
+
+searchButton.addEventListener('click', () => {
+    const query = searchInput.value.trim();
+    if (query.length >= 2) {
+        searchLocations(query);
+    }
+});
+
+searchResults.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('search-result-item')) {
+        const locationName = e.target.dataset.name;
+        searchInput.value = locationName;
+        searchResults.style.display = 'none';
+        
+        // Fetch and display location data
+        try {
+            const response = await fetch(`/api/location-data/${encodeURIComponent(locationName)}`);
+            const data = await response.json();
+            displayLocationData(data);
+        } catch (error) {
+            console.error('Error loading location data:', error);
+        }
+    }
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.style.display = 'none';
+    }
+});
+
+// Event listeners for filters
+document.getElementById('stateFilter').addEventListener('input', (e) => {
+    const states = Array.from(document.querySelectorAll('#stateList .location-item')).map(item => item.dataset.name);
+    updateLocationList('stateList', states, e.target.value);
+});
+
+document.getElementById('countyFilter').addEventListener('input', (e) => {
+    const counties = Array.from(document.querySelectorAll('#countyList .location-item')).map(item => item.dataset.name);
+    updateLocationList('countyList', counties, e.target.value);
+});
+
+document.getElementById('cityFilter').addEventListener('input', (e) => {
+    const cities = Array.from(document.querySelectorAll('#cityList .location-item')).map(item => item.dataset.name);
+    updateLocationList('cityList', cities, e.target.value);
+});
+
+// Event delegation for location selection
+document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('location-item')) {
+        const name = e.target.dataset.name;
+        const parent = e.target.parentElement.id;
+
+        // Remove previous selection in the same list
+        e.target.parentElement.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+        e.target.classList.add('selected');
+
+        if (parent === 'stateList') {
+            currentState = name;
+            await loadCounties(name);
+            document.getElementById('cityList').innerHTML = '';
+        } else if (parent === 'countyList') {
+            currentCounty = name;
+            await loadCities(currentState, name);
+        }
+
+        // Fetch and display location data
+        try {
+            const response = await fetch(`/api/location-data/${encodeURIComponent(name)}`);
+            const data = await response.json();
+            displayLocationData(data);
+        } catch (error) {
+            console.error('Error loading location data:', error);
+        }
+    }
+});
+
+// Initial load of states
+loadStates();
+</script>
+{% endblock %} 

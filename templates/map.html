@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}Map{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<style>
+    .container {
+        max-width: 1200px;
+        padding: 20px;
+        margin: 0 auto;
+    }
+
+    .map-search-container {
+        position: relative;
+        margin: 20px 0;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .map-search-input {
+        flex: 1;
+        padding: 12px;
+        font-size: 16px;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .search-button {
+        padding: 12px 24px;
+        font-size: 16px;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .search-button:hover {
+        background-color: #5a6268;
+    }
+
+    .search-results-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        max-height: 300px;
+        overflow-y: auto;
+        display: none;
+        z-index: 1000;
+    }
+
+    .search-result-item {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s;
+    }
+
+    .search-result-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .population-info {
+        margin: 20px 0;
+        padding: 20px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .population-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .population-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #e0e0e0;
+    }
+
+    .population-label {
+        font-weight: bold;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .population-value {
+        font-size: 1.2em;
+        color: #333;
+    }
+
+    #map {
+        height: 500px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-top: 20px;
+    }
+
+    .filter-toolbar {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: #495057;
+        min-width: 80px;
+    }
+
+    .filter-input {
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 120px;
+    }
+
+    .filter-select {
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 150px;
+        background-color: white;
+    }
+
+    .population-range, .area-range {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .range-separator {
+        color: #6c757d;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Population Data Map</h1>
+    <p>Search for a location to see its population data and location on the map.</p>
+
+    <div class="map-search-container">
+        <input type="text" 
+               id="searchInput" 
+               class="map-search-input" 
+               placeholder="Search for any location...">
+        <button id="searchButton" class="search-button">Search</button>
+        <div id="searchResults" class="search-results-dropdown"></div>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="filter-toolbar">
+        <div class="filter-group">
+            <span class="filter-label">Population:</span>
+            <div class="population-range">
+                <select class="filter-input" id="populationMin">
+                    <option value="">Min</option>
+                    <option value="1000">1,000</option>
+                    <option value="5000">5,000</option>
+                    <option value="10000">10,000</option>
+                    <option value="50000">50,000</option>
+                    <option value="100000">100,000</option>
+                    <option value="500000">500,000</option>
+                    <option value="1000000">1,000,000</option>
+                </select>
+                <span class="range-separator">to</span>
+                <select class="filter-input" id="populationMax">
+                    <option value="">Max</option>
+                    <option value="5000">5,000</option>
+                    <option value="10000">10,000</option>
+                    <option value="50000">50,000</option>
+                    <option value="100000">100,000</option>
+                    <option value="500000">500,000</option>
+                    <option value="1000000">1,000,000</option>
+                    <option value="5000000">5,000,000+</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Area:</span>
+            <div class="area-range">
+                <select class="filter-input" id="areaMin">
+                    <option value="">Min</option>
+                    <option value="10">10 sq mi</option>
+                    <option value="50">50 sq mi</option>
+                    <option value="100">100 sq mi</option>
+                    <option value="500">500 sq mi</option>
+                    <option value="1000">1,000 sq mi</option>
+                    <option value="5000">5,000 sq mi</option>
+                </select>
+                <span class="range-separator">to</span>
+                <select class="filter-input" id="areaMax">
+                    <option value="">Max</option>
+                    <option value="50">50 sq mi</option>
+                    <option value="100">100 sq mi</option>
+                    <option value="500">500 sq mi</option>
+                    <option value="1000">1,000 sq mi</option>
+                    <option value="5000">5,000 sq mi</option>
+                    <option value="10000">10,000+ sq mi</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Status:</span>
+            <select class="filter-select" id="statusFilter" multiple>
+                <option value="town">Town</option>
+                <option value="village">Village</option>
+                <option value="county">County</option>
+                <option value="state">State</option>
+                <option value="city">City</option>
+                <option value="burgh">Burgh</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="populationInfo" class="population-info" style="display: none;"></div>
+    <div id="map"></div>
+</div>
+
+<script>
+    var map = L.map('map').setView([39.8283, -98.5795], 4);
+    var currentLayer = null;
+    var currentPopup = null;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const populationInfo = document.getElementById('populationInfo');
+    let searchTimeout;
+
+    function formatNumber(num) {
+        if (num === null || num === undefined || num === '') return 'N/A';
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function clearCurrentLayer() {
+        if (currentLayer) {
+            map.removeLayer(currentLayer);
+            currentLayer = null;
+        }
+        if (currentPopup) {
+            map.removeLayer(currentPopup);
+            currentPopup = null;
+        }
+    }
+
+    function createPopupContent(data) {
+        return `
+            <div style="min-width: 200px; padding: 10px;">
+                <h4 style="margin: 0 0 8px 0; color: #333;">${data.Geographic_Area}</h4>
+                <div style="font-weight: bold; color: #666;">Base Population</div>
+                <div style="font-size: 1.2em; color: #2c3e50;">${formatNumber(data.Estimated_Base)}</div>
+                <div style="margin-top: 8px; font-size: 0.9em; color: #666;">
+                    Current (2023): ${formatNumber(data['2023_Population'])}
+                </div>
+            </div>
+        `;
+    }
+
+    function displayLocationData(data) {
+        if (!data) {
+            populationInfo.style.display = 'none';
+            return;
+        }
+
+        populationInfo.innerHTML = `
+            <h2>${data.Geographic_Area}</h2>
+            <div>Status: ${data.Status}</div>
+            <div class="population-grid">
+                <div class="population-card">
+                    <div class="population-label">Base Estimate</div>
+                    <div class="population-value">${formatNumber(data.Estimated_Base)}</div>
+                </div>
+                <div class="population-card">
+                    <div class="population-label">2020</div>
+                    <div class="population-value">${formatNumber(data['2020_Population'])}</div>
+                </div>
+                <div class="population-card">
+                    <div class="population-label">2021</div>
+                    <div class="population-value">${formatNumber(data['2021_Population'])}</div>
+                </div>
+                <div class="population-card">
+                    <div class="population-label">2022</div>
+                    <div class="population-value">${formatNumber(data['2022_Population'])}</div>
+                </div>
+                <div class="population-card">
+                    <div class="population-label">2023</div>
+                    <div class="population-value">${formatNumber(data['2023_Population'])}</div>
+                </div>
+            </div>
+        `;
+        populationInfo.style.display = 'block';
+
+        // Update map with location data
+        clearCurrentLayer();
+        fetch(`/api/search-location?q=${encodeURIComponent(data.Geographic_Area)}`)
+            .then(response => response.json())
+            .then(mapData => {
+                if (mapData.error) {
+                    console.error('Error:', mapData.error);
+                    return;
+                }
+
+                if (mapData.geojson) {
+                    // Create the GeoJSON layer with custom style
+                    currentLayer = L.geoJSON(mapData.geojson, {
+                        style: {
+                            color: '#ff7800',
+                            weight: 2,
+                            opacity: 0.65,
+                            fillOpacity: 0.3
+                        }
+                    }).addTo(map);
+
+                    // Add popup to the GeoJSON layer
+                    currentLayer.bindPopup(createPopupContent(data));
+                    currentLayer.on('click', function(e) {
+                        this.openPopup();
+                    });
+                    
+                    // Automatically open the popup at the center of the boundary
+                    currentLayer.openPopup(currentLayer.getBounds().getCenter());
+                    map.fitBounds(currentLayer.getBounds());
+                } else if (mapData.lat && mapData.lon) {
+                    // If no boundary data, create a marker with popup
+                    const marker = L.marker([mapData.lat, mapData.lon]);
+                    marker.bindPopup(createPopupContent(data));
+                    currentLayer = marker.addTo(map);
+                    marker.openPopup();
+                    map.setView([mapData.lat, mapData.lon], 10);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching map data:', error);
+            });
+    }
+
+    async function searchLocations(query) {
+        if (!query) {
+            searchResults.style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/search-locations?q=${encodeURIComponent(query)}`);
+            const results = await response.json();
+            
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="search-result-item">No matches found</div>';
+            } else {
+                searchResults.innerHTML = results.map(location => `
+                    <div class="search-result-item" data-name="${location.Geographic_Area}">
+                        ${location.Geographic_Area}
+                    </div>
+                `).join('');
+            }
+            
+            searchResults.style.display = 'block';
+        } catch (error) {
+            console.error('Error searching locations:', error);
+            searchResults.innerHTML = '<div class="search-result-item">Error searching locations</div>';
+            searchResults.style.display = 'block';
+        }
+    }
+
+    // Add click handler for search button
+    document.getElementById('searchButton').addEventListener('click', () => {
+        const query = searchInput.value.trim();
+        if (query.length >= 2) {
+            searchLocations(query);
+        }
+    });
+
+    // Add enter key handler for search input
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const query = searchInput.value.trim();
+            if (query.length >= 2) {
+                searchLocations(query);
+            }
+        }
+    });
+
+    searchResults.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('search-result-item')) {
+            const locationName = e.target.dataset.name;
+            searchInput.value = locationName;
+            searchResults.style.display = 'none';
+            
+            try {
+                const response = await fetch(`/api/location-data/${encodeURIComponent(locationName)}`);
+                const data = await response.json();
+                displayLocationData(data);
+            } catch (error) {
+                console.error('Error loading location data:', error);
+            }
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %} 
