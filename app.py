@@ -1,3 +1,5 @@
+from enum import nonmember
+
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import requests
 import pandas as pd
@@ -129,14 +131,37 @@ def get_population_data():
 @app.route('/api/search-locations')
 def search_locations():
     query = request.args.get('q', '').lower()
+    pop1 = request.args.get('p1', '')
+    pop2 = request.args.get('p2', '')
+
+    if pop1 == 'Min':
+        pop1 = '0'
+    if pop2 == 'Max':
+        pop2 = '1000000000000'
+
+    pop1 = pop1.replace(',', '')
+    pop2 = pop2.replace(',', '')
+
+    min = int(pop1)
+    max = int(pop2)
+
+    print("test")
+    print(min)
+    print(max)
+
     if not query:
         return jsonify([])
     
     if df is not None:
         # Search in Geographic_Area column
         matching_locations = df[df['Geographic_Area'].str.lower().str.contains(query, na=False)]
+
+        matching_locations = matching_locations[matching_locations['2023_Population']>=min]
+
+        matching_locations = matching_locations[matching_locations['2023_Population']<=max]
+
         results = matching_locations.to_dict(orient='records')
-        
+
         # Convert numpy integers to Python integers
         for result in results:
             for key, value in result.items():
