@@ -378,7 +378,13 @@
         }
 
         try {
-            const response = await fetch(`/api/search-locations?q=${encodeURIComponent(query)}`);
+            var mindex = document.getElementById("populationMin").selectedIndex;
+            var maxdex = document.getElementById("populationMax").selectedIndex;
+
+            var minval = document.getElementById("populationMin").options[mindex].text;
+            var maxval = document.getElementById("populationMax").options[maxdex].text;
+
+            const response = await fetch(`/api/search-locations?q=${encodeURIComponent(query)}&p1=${minval}&p2=${maxval}`);
             const results = await response.json();
             
             if (results.length === 0) {
