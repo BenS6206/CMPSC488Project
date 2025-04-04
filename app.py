@@ -133,6 +133,9 @@ def search_locations():
     query = request.args.get('q', '').lower()
     pop1 = request.args.get('p1', '')
     pop2 = request.args.get('p2', '')
+    status = request.args.get('stat', '')
+
+    statlist = status.split(',')
 
     if pop1 == 'Min':
         pop1 = '0'
@@ -145,10 +148,6 @@ def search_locations():
     min = int(pop1)
     max = int(pop2)
 
-    print("test")
-    print(min)
-    print(max)
-
     if not query:
         return jsonify([])
     
@@ -159,6 +158,9 @@ def search_locations():
         matching_locations = matching_locations[matching_locations['2023_Population']>=min]
 
         matching_locations = matching_locations[matching_locations['2023_Population']<=max]
+
+        if(status):
+            matching_locations = matching_locations[matching_locations['Status'].isin(statlist)]
 
         results = matching_locations.to_dict(orient='records')
 
