@@ -54,7 +54,7 @@
         max-height: 300px;
         overflow-y: auto;
         display: none;
-        z-index: 1000;
+        z-index: 1001; /* idk why this has to be so big but it does*/
     }
 
     .search-result-item {
@@ -94,7 +94,7 @@
 
     .population-label {
         font-weight: bold;
-        color: #666;
+        color: #777777;
         margin-bottom: 5px;
     }
 
@@ -206,7 +206,7 @@
                 </select>
             </div>
         </div>
-
+        <!-- AREA FILTER: CURRENTLY UNUSED
         <div class="filter-group">
             <span class="filter-label">Area:</span>
             <div class="area-range">
@@ -219,7 +219,7 @@
                     <option value="1000">1,000 sq mi</option>
                     <option value="5000">5,000 sq mi</option>
                 </select>
-                <span class="range-separator">to</span>
+                <!<span class="range-separator">to</span>
                 <select class="filter-input" id="areaMax">
                     <option value="">Max</option>
                     <option value="50">50 sq mi</option>
@@ -231,16 +231,17 @@
                 </select>
             </div>
         </div>
+        -->
 
         <div class="filter-group">
             <span class="filter-label">Status:</span>
             <select class="filter-select" id="statusFilter" multiple>
-                <option value="town">Town</option>
-                <option value="village">Village</option>
-                <option value="county">County</option>
-                <option value="state">State</option>
-                <option value="city">City</option>
-                <option value="burgh">Burgh</option>
+                <option value="Town">Town</option>
+                <option value="Village">Village</option>
+                <option value="County">County</option>
+                <option value="State">State</option>
+                <option value="City">City</option>
+                <option value="Burgh">Burgh</option>
             </select>
         </div>
     </div>
@@ -378,13 +379,19 @@
         }
 
         try {
+            /* get population range */
             var mindex = document.getElementById("populationMin").selectedIndex;
             var maxdex = document.getElementById("populationMax").selectedIndex;
 
             var minval = document.getElementById("populationMin").options[mindex].text;
             var maxval = document.getElementById("populationMax").options[maxdex].text;
 
-            const response = await fetch(`/api/search-locations?q=${encodeURIComponent(query)}&p1=${minval}&p2=${maxval}`);
+            /* get selected status */
+            var statindex = document.getElementById("statusFilter").selectedOptions;
+            var statval = Array.from(statindex).map(({value}) => value);
+
+            /* send data */
+            const response = await fetch(`/api/search-locations?q=${encodeURIComponent(query)}&p1=${minval}&p2=${maxval}&stat=${statval}`);
             const results = await response.json();
             
             if (results.length === 0) {
