@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Census Tract Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.tailwind.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .dataTables_wrapper {
+            margin-top: 20px;
+        }
+        .details-content {
+            display: none;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .download-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .download-btn:hover {
+            background-color: #45a049;
+        }
+        .details-section {
+            margin-bottom: 15px;
+        }
+        .details-section h3 {
+            color: #2c5282;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .detail-item {
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #4a5568;
+        }
+        .detail-value {
+            color: #2d3748;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Census Tract Results</h1>
+        
+        <button class="download-btn" onclick="downloadData()">Download All Data</button>
+        
+        <!-- Results Table -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Selected Census Tracts</h2>
+            <div class="overflow-x-auto">
+                <table id="resultsTable" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tract Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Population</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for result in results %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ result.Area_Name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ result.State }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ result.Tract_Code }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ result.Total_Population }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button onclick="toggleDetails(this)" 
+                                        class="text-blue-600 hover:text-blue-800">
+                                    View Details
+                                </button>
+                                <div class="details-content">
+                                    <div class="details-section">
+                                        <h3>Population Demographics</h3>
+                                        <div class="details-grid">
+                                            <div class="detail-item">
+                                                <div class="detail-label">Total Population</div>
+                                                <div class="detail-value">{{ result.Total_Population }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label">White Population</div>
+                                                <div class="detail-value">{{ result.White_Percentage }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label">Black Population</div>
+                                                <div class="detail-value">{{ result.Black_Percentage }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label">Hispanic Population</div>
+                                                <div class="detail-value">{{ result.Hispanic_Percentage }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label">Asian Population</div>
+                                                <div class="detail-value">{{ result.Asian_Percentage }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="details-section">
+                                        <h3>Age Distribution</h3>
+                                        <div class="details-grid">
+                                            <div class="detail-item">
+                                                <div class="detail-label">Under 18</div>
+                                                <div class="detail-value">{{ result.Age_Under_18_Pct }}%</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label">18 to 64</div>
+                                                <div class="detail-value">{{ result.Age_18_to_64_Pct }}%</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label">65 and Over</div>
+                                                <div class="detail-value">{{ result.Age_65_and_Over_Pct }}%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="details-section">
+                                        <h3>Education</h3>
+                                        <div class="details-grid">
+                                            <div class="detail-item">
+                                                <div class="detail-label">High School or Higher</div>
+                                                <div class="detail-value">{{ result.High_School_Grad_Pct }}%</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label">Bachelor's Degree or Higher</div>
+                                                <div class="detail-value">{{ result.Bachelors_Degree_Pct }}%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="details-section">
+                                        <h3>Income and Housing</h3>
+                                        <div class="details-grid">
+                                            <div class="detail-item">
+                                                <div class="detail-label">Median Household Income</div>
+                                                <div class="detail-value">${{ result.Median_Household_Income }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label">Median Home Value</div>
+                                                <div class="detail-value">${{ result.Median_Home_Value }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <div class="detail-label">Homeownership Rate</div>
+                                                <div class="detail-value">{{ result.Homeownership_Rate }}%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#resultsTable').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+            });
+        });
+
+        function toggleDetails(button) {
+            const detailsContent = button.nextElementSibling;
+            if (detailsContent.style.display === "block") {
+                detailsContent.style.display = "none";
+                button.textContent = "View Details";
+            } else {
+                detailsContent.style.display = "block";
+                button.textContent = "Hide Details";
+            }
+        }
+
+        function downloadData() {
+            const resultsData = {{ results|tojson }};
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Add headers
+            csvContent += "Area Name,State,Tract Code,Population,White Population,Black Population,Hispanic Population,Asian Population,Age Under 18,Age 18-64,Age 65+,High School Grad,Bachelor's Degree,Median Income,Median Home Value,Homeownership Rate\n";
+            
+            // Add data rows
+            resultsData.forEach(function(result) {
+                const row = [
+                    `"${result.Area_Name}"`,
+                    `"${result.State}"`,
+                    result.Tract_Code,
+                    result.Total_Population,
+                    result.White_Percentage,
+                    result.Black_Percentage,
+                    result.Hispanic_Percentage,
+                    result.Asian_Percentage,
+                    result.Age_Under_18_Pct,
+                    result.Age_18_to_64_Pct,
+                    result.Age_65_and_Over_Pct,
+                    result.High_School_Grad_Pct,
+                    result.Bachelors_Degree_Pct,
+                    result.Median_Household_Income,
+                    result.Median_Home_Value,
+                    result.Homeownership_Rate
+                ].join(',');
+                csvContent += row + "\n";
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "census_tract_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html> 

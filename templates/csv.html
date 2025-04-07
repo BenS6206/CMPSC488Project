@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Census Data Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.tailwind.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.tailwind.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Census Data Explorer</h1>
+        
+        <div class="mb-6">
+            <input type="text" id="searchInput" placeholder="Search by place name or state..." 
+                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table id="dataTable" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Place Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Population</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">White</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Black</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hispanic</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asian</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for row in data %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ row.Name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ row.State }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ row.Population }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ row.White_Population }} ({{ row.White_Percentage }}%)</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ row.Black_Population }} ({{ row.Black_Percentage }}%)</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ row.Hispanic_Population }} ({{ row.Hispanic_Percentage }}%)</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ row.Asian_Population }} ({{ row.Asian_Percentage }}%)</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            var table = $('#dataTable').DataTable({
+                pageLength: 25,
+                order: [[0, 'asc']],
+                dom: '<"flex justify-between items-center mb-4"lf>rtip',
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search..."
+                }
+            });
+
+            $('#searchInput').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+        });
+    </script>
+</body>
+</html> 

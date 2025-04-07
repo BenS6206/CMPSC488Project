@@ -1,0 +1,9 @@
+# Option 1: Multiple Tracts (one per row)
+state_code,county_code,tract_code
+06,075,000100
+06,075,000200
+06,075,000300
+
+# Option 2: Range of Tracts (from-to)
+from_state_code,from_county_code,from_tract_code,to_state_code,to_county_code,to_tract_code
+06,075,000100,06,075,000300 

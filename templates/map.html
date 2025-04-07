@@ -170,9 +170,9 @@
     <p>Search for a location to see its population data and location on the map.</p>
 
     <div class="map-search-container">
-        <input type="text" 
-               id="searchInput" 
-               class="map-search-input" 
+        <input type="text"
+               id="searchInput"
+               class="map-search-input"
                placeholder="Search for any location...">
         <button id="searchButton" class="search-button">Search</button>
         <div id="searchResults" class="search-results-dropdown"></div>
@@ -354,7 +354,7 @@
                     currentLayer.on('click', function(e) {
                         this.openPopup();
                     });
-                    
+
                     // Automatically open the popup at the center of the boundary
                     currentLayer.openPopup(currentLayer.getBounds().getCenter());
                     map.fitBounds(currentLayer.getBounds());
@@ -393,7 +393,7 @@
             /* send data */
             const response = await fetch(`/api/search-locations?q=${encodeURIComponent(query)}&p1=${minval}&p2=${maxval}&stat=${statval}`);
             const results = await response.json();
-            
+
             if (results.length === 0) {
                 searchResults.innerHTML = '<div class="search-result-item">No matches found</div>';
             } else {

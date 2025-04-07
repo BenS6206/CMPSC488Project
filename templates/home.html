@@ -1,75 +1,31 @@
-{% extends "base.html" %}
-
-{% block title %}Home{% endblock %}
-
-{% block head %}
-<style>
-    .welcome-section {
-        text-align: center;
-        padding: 4rem 0;
-    }
-
-    .welcome-section h1 {
-        font-size: 2.5rem;
-        color: #333;
-        margin-bottom: 1.5rem;
-    }
-
-    .welcome-section p {
-        font-size: 1.2rem;
-        color: #666;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .features-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-top: 4rem;
-    }
-
-    .feature-card {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-
-    .feature-card h3 {
-        color: #333;
-        margin-bottom: 1rem;
-    }
-
-    .feature-card p {
-        color: #666;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-    <div class="welcome-section">
-        <h1>Welcome to Population Data Explorer</h1>
-        <p>Explore population trends and demographics across different locations with our interactive tools.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Census Data Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center mb-8">Census Data Explorer</h1>
         
-        <div class="features-grid">
-            <div class="feature-card">
-                <h3>Interactive Map</h3>
-                <p>Visualize population data on an interactive map. Search and explore different locations.</p>
-            </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <a href="/map" class="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <h2 class="text-2xl font-semibold mb-4">Interactive Map</h2>
+                <p class="text-gray-600">Explore population data through an interactive map visualization.</p>
+            </a>
             
-            <div class="feature-card">
-                <h3>Data Upload</h3>
-                <p>Upload and manage your own population datasets for analysis and visualization.</p>
-            </div>
+            <a href="/csv" class="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <h2 class="text-2xl font-semibold mb-4">Comprehensive Data</h2>
+                <p class="text-gray-600">Browse detailed census data for over 15,000 places across the United States.</p>
+            </a>
             
-            <div class="feature-card">
-                <h3>Advanced Filters</h3>
-                <p>Filter and analyze data by population size, area, and location type.</p>
-            </div>
+            <a href="/upload" class="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <h2 class="text-2xl font-semibold mb-4">Upload Data</h2>
+                <p class="text-gray-600">Upload your own census data and calculate demographic percentages.</p>
+            </a>
         </div>
     </div>
-</div>
-{% endblock %} 
+</body>
+</html> 

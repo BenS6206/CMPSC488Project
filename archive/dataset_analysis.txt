@@ -1,0 +1,7 @@
+Dataset Coverage Analysis:
+Total number of places: 22,587
+Number of states covered: 0
+Total population covered: 0
+
+States coverage:
+Series([], )

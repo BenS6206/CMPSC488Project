@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.9, pytest-7.4.3, pluggy-1.5.0 -- /Users/yegic/Desktop/CMPSC488Project-main-2/venv/bin/python3
+cachedir: .pytest_cache
+metadata: {'Python': '3.9.9', 'Platform': 'macOS-15.3.1-arm64-arm-64bit', 'Packages': {'pytest': '7.4.3', 'pluggy': '1.5.0'}, 'Plugins': {'html': '4.1.1', 'metadata': '3.1.1'}, 'JAVA_HOME': '/Users/yegic/Library/Java/JavaVirtualMachines/openjdk-22/Contents/Home'}
+rootdir: /Users/yegic/Desktop/CMPSC488Project-main-2
+plugins: html-4.1.1, metadata-3.1.1
+collecting ... collected 11 items
+
+tests/test_core.py::test_user_registration PASSED                        [  9%]
+tests/test_core.py::test_user_login PASSED                               [ 18%]
+tests/test_core.py::test_invalid_login PASSED                            [ 27%]
+tests/test_core.py::test_create_population_data PASSED                   [ 36%]
+tests/test_core.py::test_get_population_data PASSED                      [ 45%]
+tests/test_core.py::test_calculate_population_density PASSED             [ 54%]
+tests/test_core.py::test_search_locations PASSED                         [ 63%]
+tests/test_core.py::test_user_model PASSED                               [ 72%]
+tests/test_core.py::test_population_data_model PASSED                    [ 81%]
+tests/test_core.py::test_protected_route_without_token PASSED            [ 90%]
+tests/test_core.py::test_protected_route_with_token PASSED               [100%]
+
+============================== 11 passed in 0.91s ==============================
